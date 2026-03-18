@@ -1,7 +1,7 @@
 # HealthSmartAI
 
 A personalized nutrition and wellness platform built with Next.js.
-Live demo: https://yourapp.vercel.app
+Live demo: https://ai-health-tech-platform.vercel.app/dashboard
 
 ## About
 HealthSmartAI is an AI-driven health platform that helps users track 
