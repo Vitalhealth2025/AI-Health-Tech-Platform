@@ -1,9 +1,44 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setError('');
+
+    if (!email || !password) {
+      setError('Please enter your email and password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/dashboard');
+    } catch (err: any) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('Invalid email or password. Please try again.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many failed attempts. Please try again later.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -11,36 +46,36 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex justify-center mb-4">
-        <div className="flex justify-center mb-4">
-  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    {/* Left half - Yellow */}
-    <path d="M32 8C18.745 8 8 18.745 8 32C8 40.3 12.5 47.5 19 51.5V32C19 23.716 25.716 17 34 17H51.5C47.5 12.5 40.3 8 32 8Z" fill="#F4C542"/>
-    {/* Right half - Green */}
-    <path d="M32 8C45.255 8 56 18.745 56 32C56 40.3 51.5 47.5 45 51.5V32C45 23.716 38.284 17 30 17H12.5C16.5 12.5 23.7 8 32 8Z" fill="#7FB069"/>
-    {/* Heart outline */}
-    <path d="M32 54C32 54 52 42 52 28C52 22 48 18 44 18C39 18 36 22 32 26C28 22 25 18 20 18C16 18 12 22 12 28C12 42 32 54 32 54Z" fill="none" stroke="#2C3E2E" strokeWidth="1.5" strokeLinejoin="round"/>
-    {/* Circuit - Left */}
-    <circle cx="24" cy="24" r="2" fill="#2C3E2E"/>
-    <circle cx="20" cy="32" r="1.5" fill="#2C3E2E"/>
-    <circle cx="26" cy="38" r="1.5" fill="#2C3E2E"/>
-    <line x1="24" y1="26" x2="24" y2="30" stroke="#2C3E2E" strokeWidth="1.5"/>
-    <line x1="24" y1="30" x2="20" y2="32" stroke="#2C3E2E" strokeWidth="1.5"/>
-    <line x1="24" y1="30" x2="26" y2="36" stroke="#2C3E2E" strokeWidth="1.5"/>
-    {/* Circuit - Right */}
-    <circle cx="40" cy="24" r="2" fill="#2C3E2E"/>
-    <circle cx="44" cy="32" r="1.5" fill="#2C3E2E"/>
-    <circle cx="38" cy="38" r="1.5" fill="#2C3E2E"/>
-    <line x1="40" y1="26" x2="40" y2="30" stroke="#2C3E2E" strokeWidth="1.5"/>
-    <line x1="40" y1="30" x2="44" y2="32" stroke="#2C3E2E" strokeWidth="1.5"/>
-    <line x1="40" y1="30" x2="38" y2="36" stroke="#2C3E2E" strokeWidth="1.5"/>
-  </svg>
-</div>
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 8C18.745 8 8 18.745 8 32C8 40.3 12.5 47.5 19 51.5V32C19 23.716 25.716 17 34 17H51.5C47.5 12.5 40.3 8 32 8Z" fill="#F4C542"/>
+            <path d="M32 8C45.255 8 56 18.745 56 32C56 40.3 51.5 47.5 45 51.5V32C45 23.716 38.284 17 30 17H12.5C16.5 12.5 23.7 8 32 8Z" fill="#7FB069"/>
+            <path d="M32 54C32 54 52 42 52 28C52 22 48 18 44 18C39 18 36 22 32 26C28 22 25 18 20 18C16 18 12 22 12 28C12 42 32 54 32 54Z" fill="none" stroke="#2C3E2E" strokeWidth="1.5" strokeLinejoin="round"/>
+            <circle cx="24" cy="24" r="2" fill="#2C3E2E"/>
+            <circle cx="20" cy="32" r="1.5" fill="#2C3E2E"/>
+            <circle cx="26" cy="38" r="1.5" fill="#2C3E2E"/>
+            <line x1="24" y1="26" x2="24" y2="30" stroke="#2C3E2E" strokeWidth="1.5"/>
+            <line x1="24" y1="30" x2="20" y2="32" stroke="#2C3E2E" strokeWidth="1.5"/>
+            <line x1="24" y1="30" x2="26" y2="36" stroke="#2C3E2E" strokeWidth="1.5"/>
+            <circle cx="40" cy="24" r="2" fill="#2C3E2E"/>
+            <circle cx="44" cy="32" r="1.5" fill="#2C3E2E"/>
+            <circle cx="38" cy="38" r="1.5" fill="#2C3E2E"/>
+            <line x1="40" y1="26" x2="40" y2="30" stroke="#2C3E2E" strokeWidth="1.5"/>
+            <line x1="40" y1="30" x2="44" y2="32" stroke="#2C3E2E" strokeWidth="1.5"/>
+            <line x1="40" y1="30" x2="38" y2="36" stroke="#2C3E2E" strokeWidth="1.5"/>
+          </svg>
         </div>
 
         {/* Header */}
         <p className="text-center text-gray-500 text-sm font-medium mb-1">HealthSmart AI App</p>
         <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">Welcome Back!</h1>
         <p className="text-center text-gray-400 text-sm mb-6">Log in to continue your health journey.</p>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-3 mb-4">
+            {error}
+          </div>
+        )}
 
         {/* Email Field */}
         <div className="mb-4">
@@ -53,6 +88,8 @@ export default function LoginPage() {
           <input
             type="email"
             placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
@@ -69,7 +106,9 @@ export default function LoginPage() {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="Enter your password"
-              className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-10"
             />
             <button
               type="button"
@@ -94,8 +133,12 @@ export default function LoginPage() {
         </div>
 
         {/* Login Button */}
-        <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 rounded-full transition">
-          Log In
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 rounded-full transition disabled:opacity-50"
+        >
+          {loading ? 'Logging in...' : 'Log In'}
         </button>
 
         {/* Sign Up Link */}

@@ -1,0 +1,1 @@
+export const DEFAULT_CALORIE_GOAL = 2000;

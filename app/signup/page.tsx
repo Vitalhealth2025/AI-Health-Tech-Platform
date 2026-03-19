@@ -1,10 +1,87 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { validateName } from '@/lib/validation';
 
 export default function SignUpPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSignUp = async () => {
+    setError('');
+
+    // Basic presence check
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
+    // Name validation
+    const firstNameError = validateName(formData.firstName, 'First name');
+    if (firstNameError) { setError(firstNameError); return; }
+    const lastNameError = validateName(formData.lastName, 'Last name');
+    if (lastNameError) { setError(lastNameError); return; }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Create account in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      // Save user info to Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email,
+        createdAt: new Date().toISOString(),
+        role: 'standard',
+        status: 'active',
+      });
+
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err: any) {
+      if (err.code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -14,6 +91,13 @@ export default function SignUpPage() {
         <p className="text-center text-gray-500 text-sm font-medium mb-1">HealthSmart AI App</p>
         <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">Create Account</h1>
         <p className="text-center text-gray-400 text-sm mb-6">Start your health journey today.</p>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-3 mb-4">
+            {error}
+          </div>
+        )}
 
         {/* First Name */}
         <div className="mb-4">
@@ -26,6 +110,8 @@ export default function SignUpPage() {
           <input
             type="text"
             placeholder="Enter your first name"
+            value={formData.firstName}
+            onChange={(e) => handleChange('firstName', e.target.value)}
             className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
@@ -41,6 +127,8 @@ export default function SignUpPage() {
           <input
             type="text"
             placeholder="Enter your last name"
+            value={formData.lastName}
+            onChange={(e) => handleChange('lastName', e.target.value)}
             className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
@@ -56,6 +144,8 @@ export default function SignUpPage() {
           <input
             type="email"
             placeholder="Enter your email"
+            value={formData.email}
+            onChange={(e) => handleChange('email', e.target.value)}
             className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
         </div>
@@ -72,7 +162,9 @@ export default function SignUpPage() {
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder="Create a password"
-              className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              value={formData.password}
+              onChange={(e) => handleChange('password', e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-10"
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -94,7 +186,9 @@ export default function SignUpPage() {
             <input
               type={showConfirm ? 'text' : 'password'}
               placeholder="Confirm your password"
-              className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              value={formData.confirmPassword}
+              onChange={(e) => handleChange('confirmPassword', e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-10"
             />
             <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-3 text-gray-400">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -105,8 +199,12 @@ export default function SignUpPage() {
         </div>
 
         {/* Sign Up Button */}
-        <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 rounded-full transition">
-          Sign Up
+        <button
+          onClick={handleSignUp}
+          disabled={loading}
+          className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 rounded-full transition disabled:opacity-50"
+        >
+          {loading ? 'Creating account...' : 'Sign Up'}
         </button>
 
         {/* Login Link */}
