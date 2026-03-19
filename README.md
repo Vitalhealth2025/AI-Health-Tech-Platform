@@ -4,7 +4,7 @@ An AI-driven personalized nutrition and wellness platform that helps users
 track their meals, monitor health metrics, and receive intelligent dietary 
 recommendations.
 
-🔗 Live Demo: https://your-vercel-url.vercel.app
+🔗 Live Demo: https://ai-health-tech-platform.vercel.app/
 
 ## About
 HealthSmartAI is built as part of an AI HealthTech group project. The platform 
