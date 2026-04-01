@@ -69,6 +69,13 @@ const userData = {
   healthGoal: docSnap.exists() ? docSnap.data().healthGoal : '',
 };
 
+// Prune stale cache entries from previous days
+for (const key of Object.keys(localStorage)) {
+  if (key.startsWith(`ai_cache_${user.uid}_`) && !key.startsWith(`ai_cache_${user.uid}_${today}_`)) {
+    localStorage.removeItem(key);
+  }
+}
+
 // Check cache first — key includes meal count so it refreshes when meals change
 const cacheKey = `ai_cache_${user.uid}_${today}_${todaysMeals.length}`;
 const cached = localStorage.getItem(cacheKey);

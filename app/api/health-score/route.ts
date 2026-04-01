@@ -47,7 +47,7 @@ Respond with ONLY valid JSON in this exact format (no markdown, no extra text):
 }
 
 Score guidelines: 70-100 = on track, 40-69 = needs improvement, 0-39 = significant issues.
-If no meals are logged, score should be 50 and recommendations should encourage logging meals.
+If no meals are logged, score should be 0 and recommendations should encourage logging meals.
 
 For recommendations, be specific and motivational using the actual calorie numbers. Examples of the tone:
 - "You're ${Math.abs(remaining)} calories away from your goal 📊"
