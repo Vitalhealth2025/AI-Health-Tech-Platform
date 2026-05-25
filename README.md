@@ -1,76 +1,83 @@
-# HealthSmartAI
+# HealthSmart AI
 
-An AI-driven personalized nutrition and wellness platform that helps users 
-track their meals, monitor health metrics, and receive intelligent dietary 
-recommendations.
+An AI-powered personal health companion that helps users track meals, monitor calorie intake, and receive intelligent health recommendations — built as a school group project.
 
-🔗 Live Demo: https://ai-health-tech-platform.vercel.app/
-
-## About
-HealthSmartAI is built as part of an AI HealthTech group project. The platform 
-allows users to log meals, track calorie intake, manage their health profile, 
-and receive AI-generated health scores and personalized nutrition recommendations 
-powered by Claude AI.
-
-## Features
-- 🔐 Secure authentication (Sign Up / Login)
-- 👤 Personalized health profile management
-- 🍽️ Daily meal logging with calorie tracking
-- 📊 Real-time calorie progress toward custom goals
-- 🤖 AI-powered health score calculated daily
-- 💡 Personalized nutrition recommendations via Claude AI
-- ⚙️ App settings and preferences
-- 📱 Mobile-first responsive design
-
-## Pages
-- **Login** — Secure user authentication
-- **Sign Up** — New account creation
-- **Dashboard** — Health score, calorie tracking, AI recommendations and recent meals
-- **Log Meals** — Track daily food intake by meal type
-- **Profile** — View and edit personal health information and goals
-- **Settings** — App preferences, security and support
-
-## Tech Stack
-- [Next.js 14](https://nextjs.org/) — Frontend framework
-- [Tailwind CSS](https://tailwindcss.com/) — Styling
-- [Firebase](https://firebase.google.com/) — Authentication and Firestore database
-- [Anthropic Claude AI](https://anthropic.com/) — Health score and recommendations
-- [Vercel](https://vercel.com/) — Deployment
+---
 
 ## Getting Started
 
-Clone the repo and install dependencies:
+No accounts, API keys, or environment variables are required. The app runs entirely locally.
+
 ```bash
-git clone https://github.com/yourusername/AI-Health-Tech-Platform.git
-cd AI-Health-Tech-Platform
+git clone https://github.com/yourusername/healthsmartai.git
+cd healthsmartai
 npm install
-```
-
-Set up environment variables by creating a `.env.local` file:
-```
-NEXT_PUBLIC_FIREBASE_API_KEY=your_value
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_value
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_value
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_value
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_value
-NEXT_PUBLIC_FIREBASE_APP_ID=your_value
-ANTHROPIC_API_KEY=your_value
-```
-
-Run the development server:
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser and create an account to get started.
 
-## Project Status
-✅ UI prototype complete  
-✅ Firebase authentication connected  
-✅ Firestore database integrated  
-✅ Claude AI health score and recommendations live  
-⏳ Wearable device integration (planned)  
-⏳ Advanced analytics and reporting (planned)  
+---
 
-## Team
-Built as part of an AI HealthTech group project.
+## Optional: Enable Live AI Features
+
+The app works fully without an API key using built-in fallback responses. To enable real AI-generated health scores and meal suggestions, create a `.env.local` file in the project root:
+
+```
+ANTHROPIC_API_KEY=your_key_here
+```
+
+---
+
+## Features
+
+- User authentication — sign up and log in, all stored locally
+- Personalized health profile — age, height, weight, activity level, health goal
+- Daily meal logging — manual entry by meal type with calorie tracking
+- AI Suggest — enter ingredients and get 3 meal ideas with calorie estimates
+- Calorie progress — visual progress bar against a custom daily goal
+- AI health score — daily score (0–100) with 3 personalized recommendations
+- Mobile-first design — optimized for phone-sized screens
+
+---
+
+## Pages
+
+| Route | Description |
+|---|---|
+| `/` | Login |
+| `/signup` | Create account |
+| `/dashboard` | Health score, calorie summary, AI recommendations, recent meals |
+| `/log-meals` | Log food manually or use AI Suggest |
+| `/profile` | View and edit health profile |
+| `/settings` | App preferences |
+
+---
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org/) (App Router) — framework
+- [React 19](https://react.dev/) — UI
+- [TypeScript](https://www.typescriptlang.org/) — type safety
+- [Tailwind CSS v4](https://tailwindcss.com/) — styling
+- [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) — typography
+- [Anthropic Claude](https://anthropic.com/) (`claude-haiku-4-5`) — AI features (optional)
+- localStorage — all auth and data storage, no database required
+
+---
+
+## Commands
+
+```bash
+npm run dev      # Start development server
+npm run build    # Production build
+npm run lint     # Run ESLint
+```
+
+---
+
+## Notes
+
+- All data is stored in the browser's localStorage — clearing browser data will reset the app
+- Each team member runs their own local instance; accounts are not shared between devices
+- The app has no backend server, no database, and no deployment — it is local only
