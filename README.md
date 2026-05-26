@@ -1,6 +1,6 @@
 # HealthSmart AI
 
-An AI-powered personal health companion that helps users track meals, monitor calorie intake, and receive intelligent health recommendations — built as a school group project.
+An AI-powered personal health companion that helps users track meals, monitor calorie intake, and receive intelligent health recommendations — built as a group project.
 
 ---
 
