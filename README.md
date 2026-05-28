@@ -1,6 +1,6 @@
 # HealthSmart AI
 
-An AI-powered personal health companion that helps users track meals, monitor calorie intake, and receive intelligent health recommendations — built as a school group project.
+An AI-powered personal health companion that helps users track meals, monitor calorie intake, and receive intelligent health recommendations — built as a group project.
 
 ---
 
@@ -21,11 +21,17 @@ Open [http://localhost:3000](http://localhost:3000) in your browser and create a
 
 ## Optional: Enable Live AI Features
 
-The app works fully without an API key using built-in fallback responses. To enable real AI-generated health scores and meal suggestions, create a `.env.local` file in the project root:
+The app works fully without an API key using built-in fallback responses. To enable real AI-generated health scores and meal suggestions, create a `.env.local` file in the project root with one of the following:
+
+```
+OPENAI_API_KEY=your_key_here
+```
 
 ```
 ANTHROPIC_API_KEY=your_key_here
 ```
+
+If both keys are present, OpenAI takes priority. Either one enables all AI features.
 
 ---
 
@@ -61,7 +67,7 @@ ANTHROPIC_API_KEY=your_key_here
 - [TypeScript](https://www.typescriptlang.org/) — type safety
 - [Tailwind CSS v4](https://tailwindcss.com/) — styling
 - [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) — typography
-- [Anthropic Claude](https://anthropic.com/) (`claude-haiku-4-5`) — AI features (optional)
+- [OpenAI](https://openai.com/) (`gpt-4o-mini`) or [Anthropic Claude](https://anthropic.com/) (`claude-haiku-4-5`) — AI features (optional, either key works)
 - localStorage — all auth and data storage, no database required
 
 ---

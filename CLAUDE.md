@@ -15,7 +15,7 @@ npm run lint     # Run ESLint
 
 **Stack:** Next.js (App Router) + React 19 + TypeScript + Tailwind CSS v4
 
-**Backend:** localStorage (auth + data) + Anthropic Claude AI (optional — graceful fallback when key is absent)
+**Backend:** localStorage (auth + data) + AI via OpenAI or Anthropic (optional — graceful fallback when no key is present)
 
 All routes live under `app/` using file-based routing:
 - `/` — Login
@@ -24,8 +24,8 @@ All routes live under `app/` using file-based routing:
 - `/log-meals` — Meal tracking with Manual Entry and AI Suggest tabs
 - `/profile` — User profile (editable)
 - `/settings` — App settings
-- `/api/health-score` — Server-side API route; calls Claude AI (or returns computed fallback) for health score + recommendations
-- `/api/meal-suggestions` — Server-side API route; takes ingredients + meal type, returns 3 meal suggestions with calorie counts (Claude AI or hardcoded fallback)
+- `/api/health-score` — Server-side API route; calls AI (or returns computed fallback) for health score + recommendations
+- `/api/meal-suggestions` — Server-side API route; takes ingredients + meal type, returns 3 meal suggestions with calorie counts (AI or hardcoded fallback)
 
 Every page is a client component (`'use client'`). API routes are server-side Next.js route handlers.
 
@@ -61,7 +61,12 @@ hsai_meals_{uid}                  → Meal[] (all meals across all dates for the
 ai_cache_{uid}_{date}_{mealCount} → { healthScore, recommendations } (cached daily, pruned on new day)
 ```
 
-**AI integration:** Both `/api/health-score` and `/api/meal-suggestions` check for `ANTHROPIC_API_KEY` at runtime. If missing, they return computed/hardcoded fallback data — the app is fully functional without a key. When a key is present, they call `claude-haiku-4-5`. AI responses must never include emojis — the prompt explicitly instructs this.
+**AI integration:** Both `/api/health-score` and `/api/meal-suggestions` support two providers, checked in priority order at runtime:
+1. `OPENAI_API_KEY` present → uses OpenAI `gpt-4o-mini`
+2. `ANTHROPIC_API_KEY` present → uses Anthropic `claude-haiku-4-5`
+3. Neither → computed/hardcoded fallback (app is fully functional without any key)
+
+AI responses must never include emojis — the prompt explicitly instructs this.
 
 ## UI Conventions
 
@@ -125,5 +130,10 @@ Input validation and sanitization is centralized in `lib/validation.ts`:
 
 No environment variables are required to run the app. All data is stored in `localStorage`.
 
-Optionally, add to `.env.local` to enable real AI features:
-- `ANTHROPIC_API_KEY` — enables live health score generation and ingredient-based meal suggestions. Without it, both features fall back to computed/hardcoded responses.
+No environment variables are required to run the app. All data is stored in `localStorage`.
+
+Optionally, add one of the following to `.env.local` to enable real AI features. If both are set, OpenAI takes priority.
+- `OPENAI_API_KEY` — uses `gpt-4o-mini` for health score generation and meal suggestions
+- `ANTHROPIC_API_KEY` — uses `claude-haiku-4-5` for health score generation and meal suggestions
+
+Without either key, both features fall back to computed/hardcoded responses.
