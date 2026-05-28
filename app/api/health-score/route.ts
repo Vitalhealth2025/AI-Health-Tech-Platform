@@ -60,12 +60,12 @@ export async function POST(req: NextRequest) {
     const remaining = calorieGoal - totalCalories;
     const mealsLogged = Array.isArray(userData.meals) ? userData.meals.length : 0;
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    const hasOpenAI = !!process.env.OPENAI_API_KEY;
+    const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
+
+    if (!hasOpenAI && !hasAnthropic) {
       return NextResponse.json(computeFallbackScore(totalCalories, calorieGoal, mealsLogged));
     }
-
-    const Anthropic = (await import('@anthropic-ai/sdk')).default;
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const safeName = sanitizeForPrompt(userData.firstName);
     const safeActivityLevel = sanitizeForPrompt(userData.activityLevel || 'not specified');
@@ -110,16 +110,30 @@ For recommendations, be specific and motivational using the actual calorie numbe
 Always include the actual numbers (calories remaining, meals logged, etc.) in the recommendations.
 Provide exactly 3 short, friendly, and actionable recommendations.`;
 
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 512,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    let rawText: string;
 
-    const textBlock = response.content.find((b) => b.type === 'text');
-    if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response');
+    if (hasOpenAI) {
+      const OpenAI = (await import('openai')).default;
+      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        max_tokens: 512,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      rawText = (response.choices[0].message.content ?? '').replace(/```json\n?|\n?```/g, '').trim();
+    } else {
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5',
+        max_tokens: 512,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      const textBlock = response.content.find((b) => b.type === 'text');
+      if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response');
+      rawText = textBlock.text.replace(/```json\n?|\n?```/g, '').trim();
+    }
 
-    const rawText = textBlock.text.replace(/```json\n?|\n?```/g, '').trim();
     const aiData = JSON.parse(rawText);
     return NextResponse.json(aiData);
   } catch (err) {
