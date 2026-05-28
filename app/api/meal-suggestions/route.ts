@@ -97,13 +97,13 @@ export async function POST(req: NextRequest) {
     const safeIngredients = sanitizeForPrompt(ingredients || '');
     const safeMealType = sanitizeForPrompt(mealType || 'Lunch');
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    const hasOpenAI = !!process.env.OPENAI_API_KEY;
+    const hasAnthropic = !!process.env.ANTHROPIC_API_KEY;
+
+    if (!hasOpenAI && !hasAnthropic) {
       const fallback = FALLBACK[safeMealType] || FALLBACK.Lunch;
       return NextResponse.json({ suggestions: fallback });
     }
-
-    const Anthropic = (await import('@anthropic-ai/sdk')).default;
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const prompt = `You are a nutrition expert and chef. The user has these ingredients available and wants a ${safeMealType} idea.
 
@@ -134,16 +134,30 @@ Respond with ONLY valid JSON in this exact format (no markdown, no extra text):
 
 Calorie counts should be realistic estimates for a standard single serving. Keep instructions concise and actionable.`;
 
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    let rawText: string;
 
-    const textBlock = response.content.find((b) => b.type === 'text');
-    if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response');
+    if (hasOpenAI) {
+      const OpenAI = (await import('openai')).default;
+      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      rawText = (response.choices[0].message.content ?? '').replace(/```json\n?|\n?```/g, '').trim();
+    } else {
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      const textBlock = response.content.find((b) => b.type === 'text');
+      if (!textBlock || textBlock.type !== 'text') throw new Error('No text in response');
+      rawText = textBlock.text.replace(/```json\n?|\n?```/g, '').trim();
+    }
 
-    const rawText = textBlock.text.replace(/```json\n?|\n?```/g, '').trim();
     const data = JSON.parse(rawText);
     return NextResponse.json(data);
   } catch (err) {
