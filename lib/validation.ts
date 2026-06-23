@@ -52,3 +52,19 @@ export function sanitizeForPrompt(value: unknown): string {
     .trim()
     .slice(0, 200);
 }
+
+// Calculates BMI from height (cm) and weight (kg) strings
+// Returns null if either value cannot be parsed as a positive number
+export function calculateBMI(
+  height: string,
+  weight: string
+): { bmi: number; category: string } | null {
+  const h = parseFloat(height.replace(/[^0-9.]/g, ''));
+  const w = parseFloat(weight.replace(/[^0-9.]/g, ''));
+  if (!h || !w || isNaN(h) || isNaN(w) || h <= 0 || w <= 0) return null;
+  const bmi = w / Math.pow(h / 100, 2);
+  if (bmi < 18.5) return { bmi, category: 'Underweight' };
+  if (bmi < 25)   return { bmi, category: 'Normal weight' };
+  if (bmi < 30)   return { bmi, category: 'Overweight' };
+  return           { bmi, category: 'Obese' };
+}

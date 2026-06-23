@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from '@/lib/auth';
-import { addMeal } from '@/lib/storage';
+import { addMeal, getWaterIntake, saveWaterIntake } from '@/lib/storage';
 import BottomNav from '@/components/BottomNav';
 import { validateFoodName, validateNumber } from '@/lib/validation';
 
@@ -61,14 +61,25 @@ export default function LogMealsPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [suggestError, setSuggestError] = useState('');
+  const [waterGlasses, setWaterGlasses] = useState(0);
+  const [todayDate, setTodayDate] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged((user) => {
       if (!user) { router.push('/'); return; }
       setUserId(user.uid);
+      const today = new Date().toISOString().split('T')[0];
+      setTodayDate(today);
+      setWaterGlasses(getWaterIntake(user.uid, today));
     });
     return () => unsubscribe();
   }, [router]);
+
+  const handleWaterTap = (index: number) => {
+    const next = index < waterGlasses ? index : index + 1;
+    setWaterGlasses(next);
+    if (userId && todayDate) saveWaterIntake(userId, todayDate, next);
+  };
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -212,6 +223,58 @@ export default function LogMealsPage() {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Water Intake */}
+        <div className="px-6 mt-4">
+          <div className="relative rounded-3xl p-5 overflow-hidden bg-white/80 backdrop-blur-sm border border-white shadow-[0_2px_20px_rgba(0,0,0,0.06)]">
+            <svg className="absolute right-3 bottom-2 opacity-[0.06]" width="90" height="90" viewBox="0 0 24 24" fill="none">
+              <path fill="#38BDF8" d="M12 2C6 10 4 14 4 16a8 8 0 0016 0c0-2-2-6-8-14z"/>
+            </svg>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#E0F2FE' }}>
+                  <svg className="w-4 h-4 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 2C6 10 4 14 4 16a8 8 0 0016 0c0-2-2-6-8-14z"/>
+                  </svg>
+                </div>
+                <p className="text-sm font-bold text-gray-800">Water Intake</p>
+              </div>
+              <span className="text-sm font-bold text-sky-600">{waterGlasses} / 8 glasses</span>
+            </div>
+            <div className="grid grid-cols-4 gap-3 mb-3">
+              {Array.from({ length: 8 }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleWaterTap(i)}
+                  className="flex flex-col items-center gap-1"
+                  aria-label={`${i < waterGlasses ? 'Remove' : 'Add'} glass ${i + 1}`}
+                >
+                  <svg viewBox="0 0 24 32" className="w-8 h-10 transition-all" fill="none">
+                    <path d="M4 4 L6 30 Q6 31 7 31 L17 31 Q18 31 18 30 L20 4 Z"
+                      stroke={i < waterGlasses ? '#38BDF8' : '#D1D5DB'}
+                      strokeWidth="1.75" strokeLinejoin="round"
+                      fill={i < waterGlasses ? '#E0F2FE' : 'none'}
+                    />
+                    {i < waterGlasses && (
+                      <path d="M6.5 16 L7.5 30 Q7.5 30.5 8 30.5 L16 30.5 Q16.5 30.5 16.5 30 L17.5 16 Z"
+                        fill="#38BDF8" opacity="0.6"
+                      />
+                    )}
+                  </svg>
+                  <span className={`text-xs font-medium ${i < waterGlasses ? 'text-sky-500' : 'text-gray-300'}`}>{i + 1}</span>
+                </button>
+              ))}
+            </div>
+            {waterGlasses === 8 && (
+              <div className="flex items-center justify-center gap-1.5 rounded-2xl px-3 py-2 bg-sky-50 border border-sky-200">
+                <svg className="w-3.5 h-3.5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span className="text-xs font-bold text-sky-700">Daily goal reached</span>
+              </div>
+            )}
           </div>
         </div>
 

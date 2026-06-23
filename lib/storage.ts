@@ -29,6 +29,22 @@ export function getMealsByDate(uid: string, date: string): Meal[] {
   }
 }
 
+const waterKey = (uid: string, date: string) => `hsai_water_${uid}_${date}`;
+
+export function getWaterIntake(uid: string, date: string): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const val = parseInt(localStorage.getItem(waterKey(uid, date)) || '0', 10);
+    return isNaN(val) ? 0 : Math.min(Math.max(val, 0), 8);
+  } catch {
+    return 0;
+  }
+}
+
+export function saveWaterIntake(uid: string, date: string, glasses: number): void {
+  localStorage.setItem(waterKey(uid, date), String(Math.min(Math.max(glasses, 0), 8)));
+}
+
 export function addMeal(uid: string, meal: Omit<Meal, 'id'>): Meal {
   const newMeal: Meal = {
     ...meal,

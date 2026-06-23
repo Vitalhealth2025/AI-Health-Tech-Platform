@@ -7,6 +7,7 @@ import { getUserProfile, getMealsByDate } from '@/lib/storage';
 import BottomNav from '@/components/BottomNav';
 import { Meal } from '@/lib/types';
 import { DEFAULT_CALORIE_GOAL } from '@/lib/constants';
+import { calculateBMI } from '@/lib/validation';
 
 const getGreeting = () => {
   const h = new Date().getHours();
@@ -38,6 +39,8 @@ export default function DashboardPage() {
   const [healthScore, setHealthScore] = useState<number | null>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
+  const [profileHeight, setProfileHeight] = useState('');
+  const [profileWeight, setProfileWeight] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(async (user) => {
@@ -48,6 +51,8 @@ export default function DashboardPage() {
 
       const savedGoal = parseInt(profile.calorieGoal || '');
       if (!isNaN(savedGoal) && savedGoal > 0) setCalorieGoal(savedGoal);
+      setProfileHeight(profile.height || '');
+      setProfileWeight(profile.weight || '');
 
       const today = new Date().toISOString().split('T')[0];
       const todaysMeals = getMealsByDate(user.uid, today);
@@ -113,6 +118,10 @@ export default function DashboardPage() {
     return                        { label: 'Surplus',  color: 'text-rose-600',   bg: 'bg-rose-50',   border: 'border-rose-200'   };
   };
   const calorieStatus = getCalorieStatus();
+
+  const bmiResult = calculateBMI(profileHeight, profileWeight);
+  const bmiCatBg   = !bmiResult ? '' : bmiResult.bmi < 18.5 ? 'bg-sky-100'   : bmiResult.bmi < 25 ? 'bg-green-100' : bmiResult.bmi < 30 ? 'bg-amber-100' : 'bg-rose-100';
+  const bmiCatText = !bmiResult ? '' : bmiResult.bmi < 18.5 ? 'text-sky-700' : bmiResult.bmi < 25 ? 'text-green-700' : bmiResult.bmi < 30 ? 'text-amber-700' : 'text-rose-700';
 
   const formatTime = (time: string) => {
     if (!time) return '';
@@ -258,6 +267,37 @@ export default function DashboardPage() {
               <p className="text-sm text-gray-400">Log some meals to get personalized recommendations.</p>
             )}
           </div>
+
+          {/* BMI Card */}
+          {bmiResult && (
+            <div className="relative rounded-3xl p-5 overflow-hidden bg-white/80 backdrop-blur-sm border border-white shadow-[0_2px_20px_rgba(0,0,0,0.06)]">
+              {/* Faded person icon in background */}
+              <svg className="absolute right-3 bottom-2 opacity-[0.06]" width="90" height="90" viewBox="0 0 24 24" fill="none">
+                <path fill="#F59E0B" d="M12 4a4 4 0 100 8 4 4 0 000-8zm-6 16v-2a6 6 0 0112 0v2H6z"/>
+              </svg>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-bold text-gray-800">Body Mass Index</p>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${bmiCatBg} ${bmiCatText}`}>
+                  {bmiResult.category}
+                </span>
+              </div>
+              <div className="flex items-end gap-2 mb-4">
+                <span className="text-4xl font-bold text-gray-900">{bmiResult.bmi.toFixed(1)}</span>
+                <span className="text-sm text-gray-400 mb-1">kg/m²</span>
+              </div>
+              {/* Range bar — segments proportional to BMI zones 15–40 */}
+              <div className="flex h-2.5 rounded-full overflow-hidden gap-px mb-2">
+                <div className="rounded-l-full" style={{ flex: 14, background: '#7DD3FC', opacity: bmiResult.bmi < 18.5 ? 1 : 0.3 }} />
+                <div style={{ flex: 26, background: '#4ADE80', opacity: bmiResult.bmi >= 18.5 && bmiResult.bmi < 25 ? 1 : 0.3 }} />
+                <div style={{ flex: 20, background: '#FCD34D', opacity: bmiResult.bmi >= 25 && bmiResult.bmi < 30 ? 1 : 0.3 }} />
+                <div className="rounded-r-full" style={{ flex: 40, background: '#FDA4AF', opacity: bmiResult.bmi >= 30 ? 1 : 0.3 }} />
+              </div>
+              <div className="flex justify-between text-xs text-gray-300 mb-2.5">
+                <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40+</span>
+              </div>
+              <p className="text-xs text-gray-400">Calculated from height (cm) and weight (kg) in your profile</p>
+            </div>
+          )}
 
           {/* Recent Meals */}
           <div className="rounded-3xl p-5 bg-white/80 backdrop-blur-sm border border-white shadow-[0_2px_20px_rgba(0,0,0,0.06)]">
